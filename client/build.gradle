@@ -1,0 +1,41 @@
+buildscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+    classpath "com.github.node-gradle:gradle-node-plugin:3.2.1"
+  }
+}
+apply plugin: 'base'
+apply plugin: "com.github.node-gradle.node"
+node{
+	version = '16.14.2'
+	npmVersion = '8.5.0'
+	download = true
+}
+
+npm_run_build{
+	//dependsOn 'cleanResources'
+	inputs.files fileTree("src")
+	inputs.file 'package.json'
+	inputs.file 'package-lock.json'
+	outputs.dir 'dist'
+}
+
+task cleanResources(type: Delete){
+	delete '../server/src/main/webapp/resources/'
+	followSymlinks = true
+}
+
+task copyClientAssets(type: Copy){
+	dependsOn 'npm_run_build'
+	from './dist'
+	into '../server/src/main/webapp/resources/'
+}
+
+task cleanBuild{
+	dependsOn 'copyClientAssets'
+}
+assemble.dependsOn cleanBuild
